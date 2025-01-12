@@ -1,0 +1,25 @@
+{
+"manifest_version": 3,
+"name": "Malicious Website Checker",
+"version": "1.0",
+"description": "Checks for malicious websites based on redirects, popups, and more.",
+"permissions": [
+  "activeTab",
+  "scripting",
+  "webRequest",
+  "tabs",
+  "storage"
+],
+"host_permissions": ["<all_urls>"],
+"background": {
+  "service_worker": "background.js"
+},
+"content_scripts": [
+  {
+    "matches": ["https://www.google.com/search*"],
+    "js": ["content.js"]
+  }
+],
+"action": {
+}
+}
