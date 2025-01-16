@@ -5,6 +5,7 @@ var ssllabs = require("node-ssllabs");
 
 const app = express();
 const PORT = 3000;
+const sample = 'https://appstorrent.ru/programs/'
 
 // Helper function to fetch and parse a website
 async function analyzeWebsite(url) {
@@ -30,8 +31,8 @@ async function analyzeWebsite(url) {
       .get()
       .filter((href) => href.startsWith('http'));
 
-    // const unsafeLinks = links.filter((link) => !link.startsWith('https://'));
-const unsafeLinks = []
+    const unsafeLinks = links.filter((link) => !link.startsWith('https://'));
+// const unsafeLinks = []
     // Check for popups or automatic downloads
     // Detect popup behavior
     // const popupDetected = html.includes('window.open') || html.includes('new Function("open")');
@@ -58,10 +59,10 @@ const unsafeLinks = []
     // });
 
     return {
-      malicious: parsedUrl === 'http:' || unsafeLinks.length > 0 || autoDownloadDetected.length>0,
+      malicious: (parsedUrl === 'http:' || unsafeLinks.length > 0 || autoDownloadDetected.length>0) ? 'possible' : 'certified safe',
       details: {
         parsedUrl,
-        unsafeLinks,
+        httpLinks: unsafeLinks.length,
         // popupDetected,
         autoDownloadDetected,
         // externalRedirects
@@ -74,6 +75,13 @@ const unsafeLinks = []
     return { malicious: false, reason: 'error', error: error.message };
   }
 }
+
+// async function sampleUrl(){
+//   const result = await analyzeWebsite(sample)
+//   console.log(sample,result)
+// }
+
+// sampleUrl()
 
 // API Endpoint
 app.get('/verify', async (req, res) => {
