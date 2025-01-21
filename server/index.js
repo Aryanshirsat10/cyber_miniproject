@@ -2,9 +2,13 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 var ssllabs = require("node-ssllabs");
+const cors = require('cors');
+const whois = require('whois');
 
 const app = express();
 const PORT = 3000;
+app.use(express.json());
+app.use(cors());
 const sample = 'https://appstorrent.ru/programs/'
 
 // Helper function to fetch and parse a website
@@ -93,13 +97,45 @@ app.get('/verify', async (req, res) => {
 
   try {
     const result = await analyzeWebsite(url);
-    console.log(url,result)
-    res.json(result);
+    console.log(url,result) 
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
+app.post('/api/verify', async (req, res) => {
+  const {url}  = req.body;
+  console.log(url);
+  if (!url || !/^https?:\/\/.+/.test(url)) {
+    return res.status(400).json({ error: 'Invalid or missing URL parameter' });
+  }
+
+  try {
+    const result = await analyzeWebsite(url);
+    console.log(url,result) 
+    
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+app.post('/api/whois', async (req, res) => {
+  const { url } = req.body;
+  
+  if (!url || !/^https?:\/\/.+/.test(url)) {
+    return res.status(400).json({ error: 'Invalid or missing URL parameter' });
+  }
+
+  const domain = new URL(url).hostname;
+
+  whois.lookup(domain, (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'WHOIS lookup failed', details: err.message });
+    }
+    res.status(200).json({ whoisData: data });
+  });
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
