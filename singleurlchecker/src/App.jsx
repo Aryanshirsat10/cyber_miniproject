@@ -27,9 +27,15 @@ const App = () => {
       if (response.ok) {
         const data = await response.json();
         console.log(data);
-        setResponseMessage(data.malicious || 'URL verification successful');
-        setIsError(false);
-        handleWhoisLookup(url); // Trigger WHOIS lookup after verification
+        if(data.malicious){
+          setResponseMessage(data.malicious);
+          setIsError(false);
+          handleWhoisLookup(url); // Trigger WHOIS lookup after verification
+        } else {
+          setResponseMessage('URL check unsuccessful: ('+data.error+')');
+          setIsError(true);
+          handleWhoisLookup(url); // Trigger WHOIS lookup after verification
+        }
       } else {
         setResponseMessage('Failed to verify the URL');
         setIsError(true);
@@ -66,14 +72,14 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black flex flex-col h-full overflow-x-hidden">
-      <BackgroundLines className="flex items-center justify-center w-full flex-col px-4" />
+      <BackgroundLines className="absolute top-0 left-0 flex items-center justify-center w-full h-full flex-col px-4" />
 
       <main className="relative z-10 flex-grow flex items-center justify-center px-4">
         <div className="w-full max-w-2xl">
           <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
-            Welcome to URL Checker
+            Welcome to URL Checker {<br />}(Please add HTTP/HTTPS to your URL)
           </h1>
-          <div className="flex items-center bg-gray-100 dark:bg-[#171717] rounded-md">
+          <div className="flex items-center rounded-md">
             <input
               type="text"
               placeholder="Enter the URL you want to check"
@@ -94,7 +100,7 @@ const App = () => {
           {responseMessage && (
             <p
               className={`mt-4 text-center px-4 py-3 rounded-md ${
-                isError
+                isError || responseMessage=='possible'
                   ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                   : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
               }`}

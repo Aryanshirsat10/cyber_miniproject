@@ -120,6 +120,7 @@ app.post('/api/verify', async (req, res) => {
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
+
 app.post('/api/whois', async (req, res) => {
   const { url } = req.body;
   
