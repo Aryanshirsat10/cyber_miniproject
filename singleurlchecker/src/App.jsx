@@ -99,9 +99,10 @@ const App = () => {
           </div>
           {responseMessage && (
             <p
-              className={`mt-4 text-center px-4 py-3 rounded-md ${
-                isError || responseMessage=='possible'
+              className={`mt-4 text-center px-4 py-3 rounded-md capitalize ${
+                isError || responseMessage=='malicious'
                   ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                  : responseMessage=='possible' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
                   : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
               }`}
             >

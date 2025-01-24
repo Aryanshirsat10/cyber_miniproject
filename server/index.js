@@ -52,6 +52,25 @@ async function analyzeWebsite(url) {
           autoDownloadDetected.push(href);
       }
     });
+
+    const checkBlacklists = await fetch(`https://sitecheck.sucuri.net/api/v3/?scan=${url}`,{
+      method: 'GET'
+    })
+    const blackResp = await checkBlacklists.json()
+    console.log("blackRsp: ",blackResp)
+    const blackConf = blackResp.ratings.total.rating=='E'
+    const blackPoss = blackResp.ratings.total.rating=='C' || blackResp.ratings.total.rating=='D'
+
+    const openPageRank = await fetch(`https://openpagerank.com/api/v1.0/getPageRank?domains[]=${url}`,{
+      method: 'GET',
+      headers: {
+        "API-OPR": "w4skkscgs40o40cw8w8o0wogkos4c88ggos0owgc"
+      }
+    })
+    const pageRankResp = await openPageRank.json()
+    console.log("pageRankResp: ", pageRankResp)
+    const pageRank = pageRankResp.response.status_code>=400 ? pageRankResp.response.rank : 'unranked'
+    
     // Return analysis result
     // const externalRedirects = [];
     // $('a[href]').each((index, element) => {
@@ -62,14 +81,25 @@ async function analyzeWebsite(url) {
     //     }
     // });
 
+    const urlNum = parsedUrl === 'http:' ? 1 : 0
+    const linksNum = unsafeLinks.length > 0 ? 1 : 0
+    const downNum = autoDownloadDetected.length>0 ? 1 : 0
+    const blackNum = blackPoss ? 2 : 0
+    const pageNum = pageRank != 'unranked' ? 1 : 0
+    
+    const finalNum = urlNum + linksNum + downNum + blackNum + pageNum
+
+
     return {
-      malicious: (parsedUrl === 'http:' || unsafeLinks.length > 0 || autoDownloadDetected.length>0) ? 'possible' : 'certified safe',
+      malicious: blackConf ? 'malicious' : ((finalNum>=2) ? 'possible' : 'certified safe'),
       details: {
         parsedUrl,
         httpLinks: unsafeLinks.length,
         // popupDetected,
         autoDownloadDetected,
-        // externalRedirects
+        // externalRedirects,
+        blackListCheck: blackResp,
+        pageRank
       },
     };
   } catch (error) {
