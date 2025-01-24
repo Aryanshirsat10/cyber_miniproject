@@ -7,6 +7,8 @@ import { BackgroundLines } from '../components/ui/background-lines';
 const App = () => {
   const [url, setUrl] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
+  const [pageRank, setPageRank] = useState("");
+  const [blackList, setBlackList] = useState("");
   const [whoisData, setWhoisData] = useState("");
   const [isError, setIsError] = useState(false);
 
@@ -30,12 +32,13 @@ const App = () => {
         if(data.malicious){
           setResponseMessage(data.malicious);
           setIsError(false);
-          handleWhoisLookup(url); // Trigger WHOIS lookup after verification
         } else {
           setResponseMessage('URL check unsuccessful: ('+data.error+')');
           setIsError(true);
-          handleWhoisLookup(url); // Trigger WHOIS lookup after verification
         }
+        setPageRank(data.details.pageRank);
+        // setBlackList(data.details.blackListCheck);
+        handleWhoisLookup(url); // Trigger WHOIS lookup after verification
       } else {
         setResponseMessage('Failed to verify the URL');
         setIsError(true);
@@ -59,8 +62,9 @@ const App = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data.whoisData);
-        setWhoisData(data.whoisData);
+        const newData = (data.whoisData).split('URL of the ICANN WHOIS Data Problem Reporting System:')
+        console.log(newData[0]);
+        setWhoisData(newData[0]);
       } else {
         setWhoisData('Failed to retrieve WHOIS data');
       }
@@ -75,7 +79,7 @@ const App = () => {
       <BackgroundLines className="absolute top-0 left-0 flex items-center justify-center w-full h-full flex-col px-4" />
 
       <main className="relative z-10 flex-grow flex items-center justify-center px-4">
-        <div className="w-full max-w-2xl">
+        <div className="max-w-full w-5xl">
           <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
             Welcome to URL Checker {<br />}(Please add HTTP/HTTPS to your URL)
           </h1>
@@ -97,9 +101,9 @@ const App = () => {
               <Send size={20} />
             </button>
           </div>
-          {responseMessage && (
+          <div className="w-full flex gap-2">{responseMessage && (
             <p
-              className={`mt-4 text-center px-4 py-3 rounded-md capitalize ${
+              className={`mt-4 grow text-center px-4 py-3 rounded-md capitalize ${
                 isError || responseMessage=='malicious'
                   ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                   : responseMessage=='possible' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
@@ -109,8 +113,19 @@ const App = () => {
               {responseMessage}
             </p>
           )}
-          {whoisData && (
+          {pageRank!="" && (
             <pre className="mt-4 text-center px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
+              Website ranking: <span className="capitalize">{pageRank}</span>
+            </pre>
+          )}
+          </div>
+          {blackList!="" && (
+            <pre className="mt-4 text-center px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
+              {blackList}
+            </pre>
+          )}
+          {whoisData && (
+            <pre className="mt-4 text-left text-wrap px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
               {whoisData}
             </pre>
           )}

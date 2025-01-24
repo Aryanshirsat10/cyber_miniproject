@@ -29,7 +29,7 @@ async function verifyUrls(links) {
     try {
       const response = await fetch(`${apiEndpoint}?url=${encodeURIComponent(link)}`);
       const data = await response.json();
-      const status = data.malicious=='possible' ? "UNSAFE" : data.reason === "error" ? "ERROR" : "SAFE";
+      const status = data.malicious=='malicious' ? "UNSAFE" : (data.malicious=='possible' ? "MAYBE" : (data.malicious=="certified safe" ? "SAFE" : "ERROR"));
       annotateLink(link, status, data);
     } catch (error) {
       console.error("Error verifying URL:", error);
@@ -39,7 +39,7 @@ async function verifyUrls(links) {
 }
 
 function annotateLink(link, status, data) {
-  const elements = document.querySelectorAll(`a[href='${link}']`);
+  const elements = document.querySelectorAll(`a[href="${link}"]`);
   elements.forEach((element) => {
 
     if (element.hasAttribute("data-status-annotated")) {
@@ -58,11 +58,14 @@ function annotateLink(link, status, data) {
       statusBadge.innerHTML = "✅";
       statusBadge.style.color = "green";
     } else if (status === "UNSAFE") {
-      statusBadge.innerHTML = "❗️";
+      statusBadge.innerHTML = "❌";
       statusBadge.style.color = "red";
-    } else {
-      statusBadge.innerHTML = "❔";
+    } else if (status === "MAYBE") {
+      statusBadge.innerHTML = "⁉";
       statusBadge.style.color = "grey";
+    } else {
+      statusBadge.innerHTML = "⚠️";
+      statusBadge.style.color = "white";
     }
 
     // Add a tooltip with details
@@ -107,7 +110,7 @@ function getAllSearchLinks() {
 }
 
 function updateHttpToHttps() {
-  const links = document.querySelectorAll("a[href^='http://']");
+  const links = document.querySelectorAll("a[href^=`http://`]");
   links.forEach((link) => {
     const secureUrl = link.href.replace("http://", "https://");
     link.href = secureUrl;

@@ -13,45 +13,8 @@ const sample = 'https://appstorrent.ru/programs/'
 
 // Helper function to fetch and parse a website
 async function analyzeWebsite(url) {
-  try {
-    const response = await axios.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'Referer': 'https://google.com/',
-        'Origin': 'https://google.com',
-      },
-      timeout: 10000, // 10-second timeout
-      maxRedirects: 5, // Prevent automatic redirects
-    });
+  // try {
 
-    const html = response.data;
-    const $ = cheerio.load(html);
-    const baseDomain = new URL(url).hostname;
-    const parsedUrl = new URL(url).protocol;
-
-    // Check for outgoing links
-    const links = $('a[href]')
-      .map((_, element) => $(element).attr('href'))
-      .get()
-      .filter((href) => href.startsWith('http'));
-
-    const unsafeLinks = links.filter((link) => !link.startsWith('https://'));
-// const unsafeLinks = []
-    // Check for popups or automatic downloads
-    // Detect popup behavior
-    // const popupDetected = html.includes('window.open') || html.includes('new Function("open")');
-
-    // Detect automatic downloads
-    // const autoDownloadDetected = html.includes('Content-Disposition: attachment') ||
-    //                              html.includes('download') ||
-    //                              $('meta[http-equiv="refresh"]').length > 0;
-    const autoDownloadDetected = []
-    $('a[href]').each((index, element) => {
-      const href = $(element).attr('href');
-      if (href.match(/\.(exe|bat|zip|msi|js)$/i)) {
-          autoDownloadDetected.push(href);
-      }
-    });
 
     const checkBlacklists = await fetch(`https://sitecheck.sucuri.net/api/v3/?scan=${url}`,{
       method: 'GET'
@@ -69,8 +32,48 @@ async function analyzeWebsite(url) {
     })
     const pageRankResp = await openPageRank.json()
     console.log("pageRankResp: ", pageRankResp)
-    const pageRank = pageRankResp.response.status_code>=400 ? pageRankResp.response.rank : 'unranked'
+    const pageRank = (pageRankResp.response[0].rank==null || pageRankResp.response[0].rank=='') ? 'unranked' : pageRankResp.response[0].rank
     
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Referer': 'https://google.com/',
+        'Origin': 'https://google.com',
+      },
+      timeout: 10000, // 10-second timeout
+      maxRedirects: 5, // Prevent automatic redirects
+    });
+
+    const html = response.data;
+    const $ = cheerio.load(html);
+    var baseDomain = new URL(url).hostname;
+    var parsedUrl = new URL(url).protocol;
+
+    // Check for outgoing links
+    const links = $('a[href]')
+      .map((_, element) => $(element).attr('href'))
+      .get()
+      .filter((href) => href.startsWith('http'));
+
+    var unsafeLinks = links.filter((link) => !link.startsWith('https://'));
+// const unsafeLinks = []
+    // Check for popups or automatic downloads
+    // Detect popup behavior
+    // const popupDetected = html.includes('window.open') || html.includes('new Function("open")');
+
+    // Detect automatic downloads
+    // const autoDownloadDetected = html.includes('Content-Disposition: attachment') ||
+    //                              html.includes('download') ||
+    //                              $('meta[http-equiv="refresh"]').length > 0;
+    var autoDownloadDetected = []
+    $('a[href]').each((index, element) => {
+      const href = $(element).attr('href');
+      if (href.match(/\.(exe|bat|zip|msi|js)$/i)) {
+          autoDownloadDetected.push(href);
+      }
+    });
+
     // Return analysis result
     // const externalRedirects = [];
     // $('a[href]').each((index, element) => {
@@ -80,6 +83,19 @@ async function analyzeWebsite(url) {
     //         externalRedirects.push(href);
     //     }
     // });
+
+} catch (error) {
+
+  return { malicious: false, reason: 'error', error: error.message, details: {
+    // parsedUrl,
+    // httpLinks: unsafeLinks.length,
+    // // popupDetected,
+    // autoDownloadDetected,
+    // externalRedirects,
+    blackListCheck: blackResp,
+    pageRank
+  }, };
+}
 
     const urlNum = parsedUrl === 'http:' ? 1 : 0
     const linksNum = unsafeLinks.length > 0 ? 1 : 0
@@ -102,12 +118,12 @@ async function analyzeWebsite(url) {
         pageRank
       },
     };
-  } catch (error) {
-    // if (error.response && error.response.status >= 300 && error.response.status < 400) {
-    //   return { malicious: true, reason: 'Automatic redirect detected' };
-    // }
-    return { malicious: false, reason: 'error', error: error.message };
-  }
+  // } catch (error) {
+  //   // if (error.response && error.response.status >= 300 && error.response.status < 400) {
+  //   //   return { malicious: true, reason: 'Automatic redirect detected' };
+  //   // }
+  //   return { malicious: false, reason: 'error', error: error.message };
+  // }
 }
 
 // async function sampleUrl(){
@@ -130,6 +146,7 @@ app.get('/verify', async (req, res) => {
     console.log(url,result) 
     res.status(200).json(result);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
@@ -147,6 +164,7 @@ app.post('/api/verify', async (req, res) => {
     
     res.status(200).json(result);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
