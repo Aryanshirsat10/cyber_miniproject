@@ -37,7 +37,7 @@ const App = () => {
           setIsError(true);
         }
         setPageRank(data.details.pageRank);
-        // setBlackList(data.details.blackListCheck);
+        setBlackList(data.details.blackListCheck);
         handleWhoisLookup(url); // Trigger WHOIS lookup after verification
       } else {
         setResponseMessage('Failed to verify the URL');
@@ -103,15 +103,27 @@ const App = () => {
           </div>
           <div className="w-full flex gap-2">{responseMessage && (
             <p
-              className={`mt-4 grow text-center px-4 py-3 rounded-md capitalize ${
+              className={`mt-4 grow text-center px-4 py-3 rounded-md capitalize font-semibold ${
                 isError || responseMessage=='malicious'
                   ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                   : responseMessage=='possible' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
-                  : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-lime-600 text-lime-900 dark:bg-lime-500 dark:text-lime-900'
               }`}
             >
               {responseMessage}
             </p>
+          )}
+          {blackList!="" && (
+            <pre className={`mt-4 text-center px-4 py-3 rounded-md ${
+                blackList.ratings.total.rating=='E'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                  : blackList.ratings.total.rating=='D' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300'
+                  : blackList.ratings.total.rating=='C' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                  : blackList.ratings.total.rating=='B' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-lime-600 text-lime-900 dark:bg-lime-500 dark:text-lime-900'
+              }`}>
+              Overall Safety Rating: {blackList.ratings.total.rating}
+            </pre>
           )}
           {pageRank!="" && (
             <pre className="mt-4 text-center px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
@@ -119,11 +131,6 @@ const App = () => {
             </pre>
           )}
           </div>
-          {blackList!="" && (
-            <pre className="mt-4 text-center px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
-              {blackList}
-            </pre>
-          )}
           {whoisData && (
             <pre className="mt-4 text-left text-wrap px-4 py-3 rounded-md bg-gray-100 dark:bg-[#171717] text-gray-800 dark:text-gray-200">
               {whoisData}
