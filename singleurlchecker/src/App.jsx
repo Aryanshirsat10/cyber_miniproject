@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Send } from "lucide-react";
 import './App.css';
 import './index.css';
@@ -7,11 +7,25 @@ import { BackgroundLines } from '../components/ui/background-lines';
 const App = () => {
   const [url, setUrl] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
+  const [urlToCheck, setUrlToCheck] = useState('');
   const [pageRank, setPageRank] = useState("");
   const [blackList, setBlackList] = useState("");
   const [whoisData, setWhoisData] = useState("");
   const [isError, setIsError] = useState(false);
 
+  useEffect(() => {
+    // Get the URL from the query parameters
+    const params = new URLSearchParams(window.location.search);
+    const urlFromQuery = params.get('urlToCheck');
+    
+    if (urlFromQuery) {
+      setUrlToCheck(urlFromQuery);
+      setUrl(urlFromQuery);
+      // console.log('URL received from query:', urlFromQuery);
+    }
+  }, []);
+  
+  
   const handleInputChange = (e) => {
     setUrl(e.target.value);
   };
@@ -28,7 +42,7 @@ const App = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
         if(data.malicious){
           setResponseMessage(data.malicious);
           setIsError(false);
@@ -63,7 +77,7 @@ const App = () => {
       if (response.ok) {
         const data = await response.json();
         const newData = (data.whoisData).split('URL of the ICANN WHOIS Data Problem Reporting System:')
-        console.log(newData[0]);
+        // console.log(newData[0]);
         setWhoisData(newData[0]);
       } else {
         setWhoisData('Failed to retrieve WHOIS data');
